@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#11151c">
+<title>DSH Bridge</title>
+<link rel="manifest" href="/__bridge/manifest.webmanifest">
+<link rel="stylesheet" href="/__bridge/style.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="head">
+    <h1>DSH Bridge</h1>
+    <p class="sub">手机连回电脑上的 DeepSeek Harness · 零侵入</p>
+  </header>
+
+  <section class="card" id="pairCard">
+    <h2>配对 / Pair</h2>
+    <p class="hint">在电脑终端里找到一次性配对码，5 分钟内有效，只能用一次。</p>
+    <form id="pairForm" autocomplete="off">
+      <input id="code" name="code" type="text" inputmode="text" autocapitalize="off"
+             spellcheck="false" placeholder="配对码 / pair code" aria-label="配对码" required>
+      <button type="submit" id="pairBtn">连接 / Connect</button>
+    </form>
+    <p class="msg" id="pairMsg" role="status"></p>
+  </section>
+
+  <section class="card" id="mainCard" hidden>
+    <h2>已连接 / Connected</h2>
+    <a class="primary" href="/" id="openDsh">打开 DSH / Open DSH</a>
+    <button type="button" id="testNotify">发一条测试通知 / Test notification</button>
+    <button type="button" id="forget">清除本机授权 / Forget this device</button>
+    <details>
+      <summary>状态 / Status</summary>
+      <ul class="status" id="status"></ul>
+    </details>
+  </section>
+
+  <section class="card" aria-live="polite">
+    <h2>通知 / Events</h2>
+    <p class="hint" id="eventHint">等待事件。锁屏推送需要电脑端配置 webhook。</p>
+    <ul class="events" id="events"></ul>
+  </section>
+
+  <footer>
+    <p>桥是独立进程，不安装插件、不修改 <code>~/.dsh</code>、不启停 DSH。</p>
+    <p>配对设备可完整操作你的 DSH，请只在自己的设备上配对。</p>
+  </footer>
+</main>
+<script src="/__bridge/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "DSH Bridge",
+  "short_name": "DSH Bridge",
+  "description": "Zero-intrusion mobile bridge for DeepSeek Harness",
+  "lang": "zh-CN",
+  "start_url": "/__bridge/",
+  "scope": "/__bridge/",
+  "display": "standalone",
+  "background_color": "#11151c",
+  "theme_color": "#11151c",
+  "icons": [
+    {
+      "src": "/__bridge/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

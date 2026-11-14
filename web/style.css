@@ -1,0 +1,66 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --fg: #1b1f26;
+  --muted: #5c6472;
+  --line: rgba(28, 36, 48, .14);
+  --accent: #2563c9;
+  --bad: #b3261e;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11151c;
+    --card: #1a2029;
+    --fg: #e8ecf3;
+    --muted: #98a3b3;
+    --line: rgba(220, 230, 245, .14);
+    --accent: #6fa8ff;
+    --bad: #ff8a80;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.6 system-ui, -apple-system, "HarmonyOS Sans SC", "Noto Sans SC", sans-serif;
+}
+.wrap { max-width: 560px; margin: 0 auto; padding: 24px 16px calc(32px + env(safe-area-inset-bottom)); }
+.head h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+.sub, .hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 16px 0;
+}
+.card h2 { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
+form { display: flex; flex-direction: column; gap: 10px; }
+input, button, .primary {
+  font: inherit;
+  min-height: 46px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+}
+input { background: transparent; color: var(--fg); font-size: 16px; width: 100%; }
+button, .primary { cursor: pointer; text-align: center; display: block; width: 100%; }
+button[type="submit"], .primary {
+  background: var(--accent); color: #fff; border-color: transparent; text-decoration: none;
+}
+#mainCard button { margin-top: 10px; background: transparent; color: var(--fg); }
+#mainCard .primary { margin-top: 0; }
+.msg { min-height: 1.4em; font-size: 13px; margin: 10px 0 0; color: var(--muted); }
+.msg.bad { color: var(--bad); }
+.status, .events { list-style: none; padding: 0; margin: 10px 0 0; font-size: 13px; }
+.status li, .events li {
+  padding: 8px 0; border-top: 1px solid var(--line); color: var(--muted);
+  overflow-wrap: anywhere;
+}
+details { margin-top: 14px; }
+summary { cursor: pointer; color: var(--muted); font-size: 13px; min-height: 40px; }
+footer { color: var(--muted); font-size: 12px; padding: 8px 2px; }
+code { font-size: 12px; }

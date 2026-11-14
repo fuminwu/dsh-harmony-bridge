@@ -1,0 +1,26 @@
+{
+  "name": "dsh-harmony-bridge",
+  "version": "0.1.0",
+  "description": "Zero-intrusion mobile bridge for DeepSeek Harness. Built for HarmonyOS NEXT browsers; works in any modern browser.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node bridge/server.js",
+    "test": "node --test test/*.test.js",
+    "check": "node --check bridge/server.js && node --check bridge/proxy.js && node --check bridge/auth.js && node --check bridge/notify.js && node --check bridge/config.js && node --check web/mobile-shim.js && node --check web/app.js && node --check web/sw.js"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "harmonyos",
+    "harmonyos-next",
+    "pwa",
+    "reverse-proxy",
+    "remote-access"
+  ],
+  "license": "MIT",
+  "private": false,
+  "dependencies": {}
+}
