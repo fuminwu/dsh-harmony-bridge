@@ -43,7 +43,7 @@ dsh-harmony-bridge（独立 Node 进程，零依赖）
    ├─ WebSocket 升级：原始 TCP 隧道，不解析、不改写任何帧
    ├─ 事件总线：SSE 给前台 + 可选 webhook 给锁屏通知
    └─ PWA 壳：只缓存静态资源，绝不缓存 DSH 会话数据
-   │  DSH 的 token 只在电脑侧注入上游请求，不下发到手机
+   │  DSH 的 token 只在电脑侧做一次 cookie 交换，不下发到手机
    ▼
 已有的 `dsh web`（127.0.0.1:3080 或你指定的地址）
 ```
@@ -59,9 +59,9 @@ git clone https://github.com/fuminwu/dsh-harmony-bridge.git
 cd dsh-harmony-bridge
 npm test                 # 先跑测试，不需要启动真实 DSH
 
-# 终端 A：你自己的 DSH Web（官方命令，桥不会替你启动）
-npx @deepseek-ai/dsh@next web --host <你的局域网IP>
-# 记下它打印的 http://<IP>:3080/?token=... 里的 token
+# 终端 A：你自己的 DSH Web（桥不会替你启动；默认只监听 127.0.0.1）
+npx @deepseek-ai/dsh@next web
+# 记下它打印的 http://127.0.0.1:3080/?token=... 里的 token
 
 # 终端 B：桥
 export DSHB_DSH_TOKEN='上一步的 token'      # Windows PowerShell: $env:DSHB_DSH_TOKEN='...'
@@ -98,7 +98,7 @@ npm start
 
 - **两个 token 分离**：DSH 上游 token 只存在于电脑进程内存；手机拿的是独立 HMAC 设备令牌，泄露了也不会直接拿到 DSH 的 token。
 - **配对码**：随机 8 位、5 分钟有效、一次性、不写入日志文件。
-- **默认只监听回环**。要跨设备必须显式改 `DSHB_BIND`；官方 `dsh web` 本身拒绝绑 `0.0.0.0`，这个设计是故意的。
+- **默认只监听回环**。要跨设备必须显式改 `DSHB_BIND`；官方 `dsh web` 拒绝绑 wildcard（`0.0.0.0`），只接受具体地址，桥直连回环即可。
 - **Cookie**：`HttpOnly` + `SameSite=Strict`，转发前从请求里剔除，不会漏给上游。
 - **Origin 校验**：配对、通知等状态变更接口拒绝跨站来源；走隧道时建议设 `DSHB_ORIGIN`。
 - **Service Worker 只缓存 PWA 壳**，DSH 的会话、文件、API、WebSocket 一律不缓存。

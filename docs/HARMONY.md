@@ -41,9 +41,9 @@ dsh-Go 是 Flutter + Android 原生应用，其「本机模式」在手机里跑
 **电脑侧（两个终端）**
 
 ```bash
-# 终端 A：DSH 官方命令。桥不会替你启动它
-npx @deepseek-ai/dsh@next web --host <电脑局域网IP>
-# 记下 http://<IP>:3080/?token=... 里的 token
+# 终端 A：DSH 官方命令。桥不会替你启动它（默认监听 127.0.0.1）
+npx @deepseek-ai/dsh@next web
+# 记下 http://127.0.0.1:3080/?token=... 里的 token
 
 # 终端 B
 export DSHB_DSH_TOKEN='<上面的 token>'

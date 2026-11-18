@@ -93,7 +93,7 @@ export function createBridge(config, deps = {}) {
     if (pathname === '/__bridge/health') {
       return json(res, 200, {
         ok: true,
-        paired: auth.pairCode() === null,
+        pairCodePending: auth.hasPendingCode(),
         upstream: config.upstream.origin,
         upstreamTokenConfigured: Boolean(config.dshToken),
         webhookConfigured: Boolean(config.webhook),
@@ -123,7 +123,7 @@ export function createBridge(config, deps = {}) {
       const token = auth.exchange(code);
       if (!token) return json(res, 401, { error: 'invalid_or_expired_code' });
       return json(res, 200, { token, expiresIn: Math.floor(config.deviceTtlMs / 1000) }, {
-        'Set-Cookie': auth.cookieFor(token, config.deviceTtlMs),
+        'Set-Cookie': auth.cookieFor(token, config.deviceTtlMs, Boolean(config.tlsCert && config.tlsKey)),
       });
     }
 
@@ -180,11 +180,11 @@ export function createBridge(config, deps = {}) {
       socket.destroy();
       return;
     }
-    if (url.pathname.startsWith('/__bridge/') || !auth.isAuthorized(req, url)) {
+    if (url.pathname.startsWith('/__bridge/') || !originAllowed(req, config) || !auth.isAuthorized(req, url)) {
       socket.end('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
       return;
     }
-    proxy.handleUpgrade(req, socket, head);
+    proxy.handleUpgrade(req, socket, head).catch(() => socket.destroy());
   });
 
   return { server, auth, notifier, proxy, config, staticFiles };
@@ -210,6 +210,6 @@ export function start(config = loadConfig()) {
   return bridge;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   start();
 }

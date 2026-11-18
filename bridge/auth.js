@@ -29,6 +29,10 @@ export function createAuth({ secret, pairTtlMs, deviceTtlMs, now = () => Date.no
     return pending ? pending.code : null;
   }
 
+  function hasPendingCode() {
+    return Boolean(pending) && pending.expiresAt > now();
+  }
+
   function exchange(code) {
     if (!pending || !code || pending.expiresAt <= now()) return null;
     const expected = Buffer.from(pending.code);
@@ -86,9 +90,10 @@ export function createAuth({ secret, pairTtlMs, deviceTtlMs, now = () => Date.no
     return verify(readToken(req, url));
   }
 
-  function cookieFor(token, maxAgeMs) {
-    return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${Math.floor(maxAgeMs / 1000)}`;
+  function cookieFor(token, maxAgeMs, secure = false) {
+    const secureFlag = secure ? '; Secure' : '';
+    return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${Math.floor(maxAgeMs / 1000)}${secureFlag}`;
   }
 
-  return { pairCode, exchange, issueDeviceToken, verify, isAuthorized, readToken, cookieFor, COOKIE_NAME };
+  return { pairCode, hasPendingCode, exchange, issueDeviceToken, verify, isAuthorized, readToken, cookieFor, COOKIE_NAME };
 }

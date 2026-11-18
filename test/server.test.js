@@ -31,6 +31,13 @@ async function listen(server) {
 function startUpstream(handlers = {}) {
   const server = http.createServer((req, res) => {
     if (handlers.onRequest) return handlers.onRequest(req, res);
+    if (req.url.includes('token=')) {
+      res.writeHead(303, {
+        location: './',
+        'set-cookie': ['dsh-session=mock-session; Path=/; HttpOnly; SameSite=Strict'],
+      });
+      return res.end();
+    }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end('<html><head><title>DSH</title></head><body>mock dsh</body></html>');
   });
@@ -58,9 +65,11 @@ test('auth: pair code is single-use and expiring', () => {
     now: () => now,
   });
   const code = auth.pairCode();
+  assert.equal(auth.hasPendingCode(), true, 'a fresh code is pending');
   assert.equal(auth.exchange('wrong'), null);
   assert.equal(auth.verify(auth.exchange(code)), true);
   assert.equal(auth.exchange(code), null, 'a code must not be reusable');
+  assert.equal(auth.hasPendingCode(), false, 'no pending code after a successful exchange');
   assert.equal(auth.pairCode(), null, 'no code is issued after a successful exchange');
 
   const expired = createAuth({
@@ -118,9 +127,10 @@ test('notifier: builds native payloads and publishes to subscribers', async () =
 test('proxy: rewrites URL, strips bridge cookie, injects shim', () => {
   const cfg = makeConfig();
   const proxy = createProxy(cfg, 'dshb_device');
-  const target = proxy.buildUpstreamUrl('/api/session?x=1');
+  const target = proxy.buildUpstreamUrl('/api/session?x=1&dshb_token=device');
   assert.equal(target.pathname, '/api/session');
-  assert.equal(target.searchParams.get('token'), 'upstream-secret');
+  assert.equal(target.searchParams.get('token'), null, 'token is exchanged once, not injected per request');
+  assert.equal(target.searchParams.get('dshb_token'), null, 'device token must not leak upstream');
   assert.equal(target.searchParams.get('x'), '1');
 
   const headers = proxy.buildHeaders({
@@ -164,6 +174,13 @@ test('server: health, pairing, authorization and HTML injection', async (t) => {
     upstreamHandlers: {
       onRequest: (req, res) => {
         upstreamReq.push({ url: req.url, cookie: req.headers.cookie });
+        if (req.url.includes('token=')) {
+          res.writeHead(303, {
+            location: './',
+            'set-cookie': ['dsh-session=mock-session; Path=/; HttpOnly; SameSite=Strict'],
+          });
+          return res.end();
+        }
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end('<html><head></head><body>mock dsh</body></html>');
       },
@@ -206,9 +223,13 @@ test('server: health, pairing, authorization and HTML injection', async (t) => {
   const html = await page.text();
   assert.match(html, /mock dsh/);
   assert.match(html, /__bridge\/shim\.js/);
-  assert.equal(upstreamReq.length, 1);
-  assert.equal(upstreamReq[0].cookie, undefined, 'bridge cookie must not reach DSH');
-  assert.match(upstreamReq[0].url, /token=upstream-secret/);
+  assert.equal(upstreamReq.length, 2, 'one token exchange plus one page request');
+  assert.match(upstreamReq[0].url, /token=upstream-secret/, 'the bridge performs the token exchange itself');
+  assert.equal(upstreamReq[0].cookie, undefined, 'the exchange carries no cookie');
+  assert.equal(upstreamReq[1].url, '/', 'the page request carries no token');
+  assert.match(upstreamReq[1].cookie, /dsh-session=mock-session/, 'the bridge jar holds the session cookie');
+  assert.ok(!upstreamReq[1].cookie.includes('upstream-secret'));
+  assert.ok(!upstreamReq[1].cookie.includes('dshb_device'), 'bridge cookie must not reach DSH');
 });
 
 test('server: notify relays to webhook and rejects foreign origins', async (t) => {
@@ -305,6 +326,7 @@ test('server: websocket upgrade is tunneled to upstream', async (t) => {
 
   assert.match(response, /101 Switching Protocols/);
   assert.ok(upgradeSeen, 'upstream received the upgrade');
-  assert.match(upgradeSeen.url, /token=upstream-secret/);
-  assert.equal(upgradeSeen.cookie, undefined, 'bridge cookie stripped from upgrade too');
+  assert.ok(!String(upgradeSeen.url).includes('token='), 'no token in the upgrade URL');
+  assert.match(upgradeSeen.cookie, /dsh-session=mock-session/, 'upgrade carries the bridge-managed session cookie');
+  assert.ok(!/dshb_device/.test(upgradeSeen.cookie), 'bridge cookie stripped from upgrade too');
 });
